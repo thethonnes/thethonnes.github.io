@@ -1,0 +1,476 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Thonne's - Rock • Pop • Cover Band</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #000; color: #fff; line-height: 1.6; }
+        nav { position: fixed; top: 0; width: 100%; background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #333; z-index: 1000; padding: 1rem 2rem; }
+        nav .container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        nav h1 { font-size: 1.2rem; font-weight: bold; }
+        nav ul { display: flex; gap: 2rem; list-style: none; }
+        nav a { color: #fff; text-decoration: none; transition: color 0.3s; }
+        nav a:hover { color: #a855f7; }
+        .mobile-menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+        .hero { height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2rem; padding-top: 5rem; position: relative; overflow: hidden; }
+        .hero::before { content: ''; position: absolute; bottom: 0; left: 0; width: 40%; height: 80%; background: radial-gradient(ellipse at bottom left, rgba(168, 85, 247, 0.3) 0%, transparent 70%); transform: skewY(-5deg); animation: pulse-left 4s ease-in-out infinite alternate; }
+        .hero::after { content: ''; position: absolute; bottom: 0; right: 0; width: 40%; height: 80%; background: radial-gradient(ellipse at bottom right, rgba(236, 72, 153, 0.3) 0%, transparent 70%); transform: skewY(5deg); animation: pulse-right 4s ease-in-out infinite alternate; }
+        @keyframes pulse-left { 0%, 100% { opacity: 1.8; } 90% { opacity: 1.2; } }
+        @keyframes pulse-right { 0%, 100% { opacity: 1.8; } 90% { opacity: 1.3; } }
+        .hero-content { position: relative; z-index: 10; }
+        .hero h2 { font-size: 6.5rem; font-weight: bold; background: linear-gradient(to right, #a855f7, #ec4899); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+        .hero p { font-size: 1.5rem; color: #ccc; margin-bottom: 2rem; }
+        .hero-content img { max-width: 600px; width: 100%; border-radius: 15px; margin-top: 2rem; border: 2px solid #333; }
+        section { min-height: 100vh; padding: 6rem 2rem 3rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h2 { font-size: 2rem; margin-bottom: 3rem; display: flex; align-items: center; gap: 1rem; }
+        h2 svg { color: #a855f7; }
+        .show-card { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 2rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; transition: border-color 0.3s; }
+        .show-card:hover { border-color: #9333ea; }
+        .show-info h3 { font-size: 1.5rem; margin: 0.5rem 0; }
+        .show-date { color: #a855f7; font-weight: bold; font-size: 1.2rem; }
+        .show-location { color: #999; }
+        .show-time { background: rgba(147, 51, 234, 0.2); border: 1px solid #9333ea; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: bold; color: #a855f7; font-size: 1.1rem; }
+        .member-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 2rem; }
+        .member-item { background: #1a1a1a; border: 1px solid #333; border-radius: 15px; overflow: hidden; transition: all 0.3s; cursor: pointer; }
+        .member-item:hover { border-color: #9333ea; transform: translateY(-10px); box-shadow: 0 20px 40px rgba(147, 51, 234, 0.3); }
+        .member-photo { width: 100%; aspect-ratio: 3/4; overflow: hidden; position: relative; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); }
+        .member-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+        .member-item:hover .member-photo img { transform: scale(1.1); }
+        .member-instrument { position: absolute; bottom: 15px; left: 15px; background: rgba(147, 51, 234, 0.95); padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.85rem; font-weight: bold; z-index: 10; }
+        .member-content { padding: 1.5rem; }
+        .member-content h3 { font-size: 1.5rem; margin-bottom: 0.3rem; color: #fff; }
+        .member-content .role { color: #a855f7; font-size: 0.95rem; font-weight: 600; margin-bottom: 1rem; }
+        .member-content p { color: #999; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem; }
+        .member-social-mini { display: flex; gap: 0.5rem; }
+        .member-social-mini a { width: 35px; height: 35px; border-radius: 50%; background: rgba(147, 51, 234, 0.2); display: flex; align-items: center; justify-content: center; transition: all 0.3s; text-decoration: none; color: #fff; }
+        .member-social-mini a:hover { background: #9333ea; transform: scale(1.1); }
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+        .photo-item { aspect-ratio: 1; overflow: hidden; border-radius: 10px; cursor: pointer; position: relative; }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .photo-item:hover img { transform: scale(1.1); }
+        .photo-item:hover::after { content: ''; position: absolute; inset: 0; background: rgba(168, 85, 247, 0.2); }
+        .music-container { display: grid; gap: 2rem; }
+        .music-item { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 2rem; transition: border-color 0.3s; }
+        .music-item:hover { border-color: #9333ea; }
+        .music-item h3 { margin-bottom: 1rem; color: #a855f7; }
+        .music-item audio { width: 100%; margin-top: 1rem; }
+        .music-item video { width: 100%; border-radius: 8px; margin-top: 1rem; }
+        .setlist-container { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 2rem; max-width: 800px; }
+        .setlist-header { border-bottom: 2px solid #9333ea; padding-bottom: 1rem; margin-bottom: 2rem; }
+        .setlist-header h3 { color: #a855f7; font-size: 1.5rem; }
+        .setlist-notes { margin-top: 2rem; padding: 1rem; background: #2a2a2a; border-left: 3px solid #9333ea; border-radius: 4px; }
+        .setlist-notes h4 { color: #a855f7; margin-bottom: 0.5rem; }
+        .setlist-notes p { color: #999; font-size: 0.9rem; }
+        .contact-box { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 2rem; max-width: 600px; }
+        .contact-box h3 { margin-bottom: 1rem; }
+        .contact-box p { color: #999; margin-bottom: 2rem; }
+        .contact-info { margin-bottom: 2rem; }
+        .contact-info-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: #2a2a2a; border-radius: 8px; margin-bottom: 1rem; }
+        .contact-info-item svg { color: #a855f7; }
+        .social-links { display: flex; gap: 1rem; margin-top: 1rem; }
+        .social-btn { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #fff; transition: transform 0.3s; }
+        .social-btn:hover { transform: scale(1.1); }
+        .facebook { background: #1877f2; }
+        footer { border-top: 1px solid #333; padding: 2rem; text-align: center; color: #666; }
+        footer a { color: #666; text-decoration: none; margin: 0 0.5rem; transition: color 0.3s; }
+        footer a:hover { color: #a855f7; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 2000; align-items: center; justify-content: center; padding: 2rem; }
+        .modal.active { display: flex; }
+        .modal-content { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 2rem; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; }
+        .modal h3 { color: #a855f7; margin-bottom: 1.5rem; }
+        .modal p { color: #999; margin-bottom: 1rem; line-height: 1.6; }
+        .modal strong { color: #fff; }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+        @media (max-width: 768px) {
+            .hero h2 { font-size: 3rem; }
+            nav .container { flex-direction: row; align-items: center; }
+            nav ul { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(0, 0, 0, 0.95); padding: 1rem; border-bottom: 1px solid #333; }
+            nav ul.active { display: flex; }
+            nav a { padding: 0.5rem 0; font-size: 1rem; }
+            .mobile-menu-toggle { display: block; }
+            h2 { font-size: 2rem; }
+            .show-card { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <h1>THE THONNE'S</h1>
+            <div class="mobile-menu-toggle" id="mobileMenuToggle">☰</div>
+            <ul id="navMenu">
+                <li><a href="#home">Accueil</a></li>
+                <li><a href="#shows">Concerts</a></li>
+                <li><a href="#membres">Membres</a></li>
+                <li><a href="#photos">Photos</a></li>
+                <li><a href="#music">Musique</a></li>
+                <li><a href="#setlist">Setlist</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+    <div class="hero-content">
+       <img src="Photos/LOGO_TH.png" alt="The Thonne's Logo" style="width: 200px; height: auto; margin-bottom: 1rem;">
+<h2 style="font-size: 4.5rem;">THE THONNE'S</h2>
+            <p>Rock • Pop • Cover Band</p>
+            <img src="members/Thonnes02.jpg" alt="The Thonne's Band">
+            <p style="font-style: italic; color: #999; margin-top: 1.5rem; font-size: 1.3rem; max-width: 600px; margin-left: auto; margin-right: auto;">« Notre musique doit être source de plaisir – pour notre public et bien sûr pour nous-mêmes. »</p>
+        </div>
+    </section>
+
+    <section id="shows">
+        <div class="container">
+            <h2>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Prochains Concerts
+            </h2>
+            <div class="show-card">
+                <div class="show-info">
+                    <div class="show-date">17.10.2025</div>
+                    <h3>Sommethonne en fête</h3>
+                    <div class="show-location">(B) Sommethonne</div>
+                </div>
+                <div class="show-time">22:00</div>
+            </div>
+            <div class="show-card">
+                <div class="show-info">
+                    <div class="show-date">À venir</div>
+                    <h3>Nouveau concert bientôt annoncé</h3>
+                    <div class="show-location">Suivez-nous pour plus d'infos</div>
+                </div>
+                <div class="show-time">--:--</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="membres">
+        <div class="container">
+            <h2>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Les Membres du Groupe
+            </h2>
+            <div class="member-grid">
+                <div class="member-item">
+                    <div class="member-photo">
+                        <img src="members/Elo.jpg" alt="Elodie">
+                        <div class="member-instrument">Chanteuse</div>
+                    </div>
+                    <div class="member-content">
+                        <h3>Elodie</h3>
+                        <div class="role">Chanteuse Principale</div>
+                        <p>La voix puissante et captivante des Thonne's, Elodie apporte émotion et énergie à chaque performance.</p>
+                    </div>
+                </div>
+                <div class="member-item">
+                    <div class="member-photo">
+                        <img src="members/Nicko.jpg" alt="Nicko">
+                        <div class="member-instrument">Saxophone, Harmonica, Flûtes</div>
+                    </div>
+                    <div class="member-content">
+                        <h3>Nicko</h3>
+                        <div class="role">Multi-instrumentiste</div>
+                        <p>Nicko enrichit notre son avec ses talents au saxophone, harmonica et flûtes, créant des ambiances uniques.</p>
+                    </div>
+                </div>
+                <div class="member-item">
+                    <div class="member-photo">
+                        <img src="members/David.jpg" alt="David">
+                        <div class="member-instrument">Guitare</div>
+                    </div>
+                    <div class="member-content">
+                        <h3>David</h3>
+                        <div class="role">Guitariste</div>
+                        <p>David crée les riffs et solos qui définissent notre son rock, avec technique et passion.</p>
+                    </div>
+                </div>
+                <div class="member-item">
+                    <div class="member-photo">
+                        <img src="members/Pascal.jpg" alt="Pascal">
+                        <div class="member-instrument">Basse</div>
+                    </div>
+                    <div class="member-content">
+                        <h3>Pascal</h3>
+                        <div class="role">Bassiste</div>
+                        <p>Pascal pose les fondations rythmiques du groupe avec son jeu de basse groovy et percutant.</p>
+                    </div>
+                </div>
+                <div class="member-item">
+                    <div class="member-photo">
+                        <img src="members/Fred.jpg" alt="Fred">
+                        <div class="member-instrument">Batterie</div>
+                    </div>
+                    <div class="member-content">
+                        <h3>Fred</h3>
+                        <div class="role">Batteur</div>
+                        <p>Le cœur battant des Thonne's, Fred donne le tempo et l'énergie explosive à nos morceaux.</p>
+                    </div>
+                </div>
+                <div class="member-item">
+                    <div class="member-photo">
+                        <img src="members/Ren.jpg" alt="René">
+                        <div class="member-instrument">Clavier</div>
+                    </div>
+                    <div class="member-content">
+                        <h3>René</h3>
+                        <div class="role">Claviériste</div>
+                        <p>René apporte les textures et atmosphères qui enrichissent notre son avec ses claviers.</p>
+                    </div>
+                </div>
+                <div class="member-item">
+                    <div class="member-photo">
+                        <img src="members/Yona.jpg" alt="Yona">
+                        <div class="member-instrument">Son & Technique</div>
+                    </div>
+                    <div class="member-content">
+                        <h3>Yona</h3>
+                        <div class="role">Mixeur & Technicien</div>
+                        <p>Yona assure la qualité sonore parfaite de nos concerts et gère toute la partie technique du groupe.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="photos">
+        <div class="container">
+            <h2>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                Photos
+            </h2>
+            <div class="photo-grid">
+                <div class="photo-item"><img src="Photos/TH005.jpg" alt="Photo 1"></div>
+                <div class="photo-item"><img src="Photos/TH009.jpg" alt="Photo 2"></div>
+                <div class="photo-item"><img src="Photos/TH001.jpg" alt="Photo 3"></div>
+                <div class="photo-item"><img src="Photos/TH002.jpg" alt="Photo 4"></div>
+                <div class="photo-item"><img src="Photos/TH003.jpg" alt="Photo 5"></div>
+                <div class="photo-item"><img src="Photos/TH006.jpg" alt="Photo 6"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="music">
+        <div class="container">
+            <h2>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+                Musique
+            </h2>
+            <div class="music-container">
+                <div class="music-item">
+                    <h3>🎵 Demo tape des Thonne's 01</h3>
+                    <p style="color: #999;">Tainted Love - I want to know what love is - Banana Split</p>
+                    <audio controls><source src="Movies/T-Demo01.mp3" type="audio/mpeg"></audio>
+                </div>
+                <div class="music-item">
+                    <h3>🎵 Demo tape des Thonne's 02</h3>
+                    <p style="color: #999;">Oh boy - Apologie - Jump - You shook me all night long</p>
+                    <audio controls><source src="Movies/T-Demo02.mp3" type="audio/mpeg"></audio>
+                </div>
+                <div class="music-item">
+                    <h3>🎬 Live Performance</h3>
+                    <p style="color: #999;">Concert à Florenville 2025</p>
+                    <video controls><source src="Movies/IMG_5718.mp4" type="video/mp4"></video>
+                </div>
+                <div class="music-item">
+                    <h3>🎬 Live Performance</h3>
+                    <p style="color: #999;">Concert à Lamorteau 2025</p>
+                    <video controls><source src="Movies/Lamorteau25.mp4" type="video/mp4"></video>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="setlist">
+        <div class="container">
+            <h2>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+               Setlist
+            </h2>
+            <div class="setlist-container">
+                <div class="setlist-header">
+                    <h3>Setlist 2025</h3>
+                    <p style="color:#999;">Aperçu direct de la setlist</p>
+                </div>
+                <img src="Documents/Setlist_TheThonnes2025.jpg" alt="Setlist" style="width:100%;border-radius:10px;border:1px solid #333;margin-bottom:1.5rem;">
+                <div class="setlist-notes">
+                    <h4>Notes</h4>
+                    <p>Il y a beaucoup d'autres chansons, celles-ci ne sont qu'une partie. La setlist peut changer pour chaque événement.</p>
+                    <p>La setlist peut varier selon l'événement.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <div class="container">
+            <h2>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                Contact
+            </h2>
+            <div class="contact-box">
+                <h3>Réservez The Thonne's</h3>
+                <p>Intéressé par notre groupe pour votre événement? Contactez-nous!</p>
+                <div class="contact-info">
+                    <div class="contact-info-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        <div>
+                            <strong>Email</strong><br>
+                            <a href="mailto:thethonnes@gmail.com" style="color: #a855f7;">thethonnes@gmail.com</a>
+                        </div>
+                    </div>
+                    <div class="contact-info-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                        <div>
+                            <strong>Téléphone</strong><br>
+                            <a href="tel:+33664189492" style="color: #a855f7;">(+33) 06 64 18 94 92</a><br>
+                            <a href="tel:+33621086871" style="color: #a855f7;">(+33) 06 21 08 68 71</a>
+                        </div>
+                    </div>
+                </div>
+                <h4 style="margin-top: 2rem; margin-bottom: 1rem;">Suivez-nous</h4>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/thethonnesX" class="social-btn facebook">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 The Thonne's. Tous droits réservés. | <a href="#" id="mentionsLink">Mentions légales</a></p>
+    </footer>
+
+    <div class="modal" id="mentionsModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">&times;</button>
+            <h3>Mentions Légales</h3>
+            <p><strong>Éditeur du site</strong></p>
+            <p>
+                The Thonne's<br>
+                9, rue des Comtes de Chiny<br>
+                55600 Avioth<br>
+                France
+            </p>
+            <p><strong>Contact</strong></p>
+            <p>
+                Email: <a href="mailto:thethonnes@gmail.com" style="color: #a855f7;">thethonnes@gmail.com</a><br>
+                Téléphone: (+33) 06 21 08 68 71
+            </p>
+            <p><strong>Directeur de la publication</strong></p>
+            <p>The Thonne's</p>
+            <p><strong>Hébergement</strong></p>
+            <p style="color: #666; font-style: italic;">[À compléter ultérieurement]</p>
+        </div>
+    </div>
+
+    <script>
+        const mentionsLink = document.getElementById('mentionsLink');
+        const mentionsModal = document.getElementById('mentionsModal');
+        const closeModal = document.getElementById('closeModal');
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const navMenu = document.getElementById('navMenu');
+
+        mentionsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            mentionsModal.classList.add('active');
+        });
+
+        closeModal.addEventListener('click', () => {
+            mentionsModal.classList.remove('active');
+        });
+
+        mentionsModal.addEventListener('click', (e) => {
+            if (e.target === mentionsModal) {
+                mentionsModal.classList.remove('active');
+            }
+        });
+
+        mobileMenuToggle.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        // Close mobile menu when a link is clicked
+        navMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>
