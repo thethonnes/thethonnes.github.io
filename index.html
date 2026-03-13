@@ -75,6 +75,13 @@
         .show-date { color: #a855f7; font-weight: bold; font-size: 1.2rem; }
         .show-location { color: #999; }
         .show-time { background: rgba(147, 51, 234, 0.2); border: 1px solid #9333ea; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: bold; color: #a855f7; font-size: 1.1rem; }
+        .show-poster-thumb { width: 60px; height: 80px; object-fit: cover; border-radius: 6px; border: 2px solid #333; cursor: pointer; transition: all 0.3s; flex-shrink: 0; }
+        .show-poster-thumb:hover { border-color: #a855f7; transform: scale(1.08); box-shadow: 0 0 15px rgba(168,85,247,0.4); }
+        .poster-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 3000; align-items: center; justify-content: center; padding: 2rem; cursor: pointer; }
+        .poster-modal.active { display: flex; }
+        .poster-modal img { max-width: 90vw; max-height: 90vh; border-radius: 10px; border: 2px solid #9333ea; box-shadow: 0 0 40px rgba(147,51,234,0.5); }
+        .poster-modal-close { position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(0,0,0,0.7); border: 1px solid #555; color: #fff; font-size: 2rem; cursor: pointer; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .poster-modal-close:hover { background: #9333ea; border-color: #9333ea; }
         .past-concert .show-info h3 { font-size: 1.2rem; }
         .past-concert .show-location { font-size: 1.1rem; font-weight: 600; }
         .member-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 2rem; }
@@ -192,6 +199,7 @@
         <h3>Musée de la Bière</h3>
         <div class="show-location">Stenay</div>
     </div>
+    <img src="Documents/affiche_musee_biere_2026.jpg" alt="Affiche" class="show-poster-thumb" title="Voir l'affiche">
     <div class="show-time">14:00-18:00</div>
 </div>    
         <div class="show-card">
@@ -499,7 +507,7 @@
                         </svg>
                         <div>
                             <strong>Email</strong><br>
-                            <a href="mailto:thethonnes@gmail.com" style="color: #a855f7;">thethonnes@gmail.com</a>
+                            <a href="/cdn-cgi/l/email-protection#becad6dbcad6d1d0d0dbcdfed9d3dfd7d290ddd1d3" style="color: #a855f7;"><span class="__cf_email__" data-cfemail="89fde1ecfde1e6e7e7ecfac9eee4e8e0e5a7eae6e4">[email&#160;protected]</span></a>
                         </div>
                     </div>
                     <div class="contact-info-item">
@@ -542,7 +550,7 @@
             </p>
             <p><strong>Contact</strong></p>
             <p>
-                Email: <a href="mailto:thethonnes@gmail.com" style="color: #a855f7;">thethonnes@gmail.com</a><br>
+                Email: <a href="/cdn-cgi/l/email-protection#73071b16071b1c1d1d160033141e121a1f5d101c1e" style="color: #a855f7;"><span class="__cf_email__" data-cfemail="daaeb2bfaeb2b5b4b4bfa99abdb7bbb3b6f4b9b5b7">[email&#160;protected]</span></a><br>
                 Téléphone: (+33) 06 21 08 68 71
             </p>
             <p><strong>Directeur de la publication</strong></p>
@@ -552,7 +560,7 @@
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         const mentionsLink = document.getElementById('mentionsLink');
         const mentionsModal = document.getElementById('mentionsModal');
         const closeModal = document.getElementById('closeModal');
@@ -574,16 +582,48 @@
             }
         });
 
-        mobileMenuToggle.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-        });
+        // Mobile menu toggle
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+            });
+        }
 
-        // Close mobile menu when a link is clicked
-        navMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                navMenu.classList.remove('active');
+        // Poster lightbox
+        const posterModal = document.getElementById('posterModal');
+        const posterModalImg = document.getElementById('posterModalImg');
+        const posterModalClose = document.getElementById('posterModalClose');
+
+        document.querySelectorAll('.show-poster-thumb').forEach(img => {
+            img.addEventListener('click', () => {
+                posterModalImg.src = img.src;
+                posterModal.classList.add('active');
             });
         });
+
+        posterModalClose.addEventListener('click', () => {
+            posterModal.classList.remove('active');
+        });
+
+        posterModal.addEventListener('click', (e) => {
+            if (e.target === posterModal) {
+                posterModal.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                posterModal.classList.remove('active');
+                mentionsModal.classList.remove('active');
+            }
+        });
     </script>
+
+    <!-- Poster Lightbox Modal -->
+    <div class="poster-modal" id="posterModal">
+        <button class="poster-modal-close" id="posterModalClose">&times;</button>
+        <img id="posterModalImg" src="" alt="Concert Poster">
+    </div>
+
 </body>
 </html>
